@@ -32,7 +32,7 @@ def add_epoch_number(batch: Batch, epoch: int) -> Batch:
     Add the epoch number to the batch instances as a MetadataField.
     """
     for instance in batch.instances:
-        instance.fields['epoch_num'] = MetadataField(epoch)
+        instance.fields["epoch_num"] = MetadataField(epoch)
     return batch
 
 
@@ -54,10 +54,12 @@ class PnetIterator(DataIterator):
         could be useful if your instances are read lazily from disk.
     """
 
-    def __init__(self,
-                 batch_size: int = 32,
-                 instances_per_epoch: int = None,
-                 max_instances_in_memory: int = None) -> None:
+    def __init__(
+        self,
+        batch_size: int = 32,
+        instances_per_epoch: int = None,
+        max_instances_in_memory: int = None,
+    ) -> None:
         super().__init__(batch_size, instances_per_epoch, max_instances_in_memory)
         self._batch_size = batch_size
         self._instances_per_epoch = instances_per_epoch
@@ -65,11 +67,13 @@ class PnetIterator(DataIterator):
 
         self._cursors: Dict[int, Iterator[Instance]] = {}
 
-    def __call__(self,
-                 instances: Iterable[Instance],
-                 num_epochs: int = None,
-                 shuffle: bool = True,
-                 cuda_device: int = -1) -> Iterator[TensorDict]:
+    def __call__(
+        self,
+        instances: Iterable[Instance],
+        num_epochs: int = None,
+        shuffle: bool = True,
+        cuda_device: int = -1,
+    ) -> Iterator[TensorDict]:
         """
         Returns a generator that yields batches over the given dataset
         for the given number of epochs. If ``num_epochs`` is not specified,
@@ -122,8 +126,9 @@ class PnetIterator(DataIterator):
                 padding_lengths = batch.get_padding_lengths()
                 logger.debug("Batch padding lengths: %s", str(padding_lengths))
                 logger.debug("Batch size: %d", len(batch.instances))
-                tensor_dict = batch.as_tensor_dict(padding_lengths,
-                                                   cuda_device=cuda_device)
+                tensor_dict = batch.as_tensor_dict(
+                    padding_lengths, cuda_device=cuda_device
+                )
 
                 if add_to_cache:
                     self._cache[key].append(tensor_dict)
@@ -141,9 +146,9 @@ class PnetIterator(DataIterator):
             # Not lazy, so can compute the list length.
             return math.ceil(len(ensure_list(instances)) / self._batch_size)
 
-    def _take_instances(self,
-                        instances: Iterable[Instance],
-                        max_instances: Optional[int] = None) -> Iterator[Instance]:
+    def _take_instances(
+        self, instances: Iterable[Instance], max_instances: Optional[int] = None
+    ) -> Iterator[Instance]:
         """
         Take the next `max_instances` instances from the given dataset.
         If `max_instances` is `None`, then just take all instances from the dataset.
@@ -172,7 +177,9 @@ class PnetIterator(DataIterator):
             # We may have a new iterator, so update the cursor.
             self._cursors[key] = iterator
 
-    def _memory_sized_lists(self, instances: Iterable[Instance]) -> Iterable[List[Instance]]:
+    def _memory_sized_lists(
+        self, instances: Iterable[Instance]
+    ) -> Iterable[List[Instance]]:
         """
         Breaks the dataset into "memory-sized" lists of instances,
         which it yields up one at a time until it gets through a full epoch.
@@ -208,7 +215,9 @@ class PnetIterator(DataIterator):
             yield list(iterator)
 
     @overrides
-    def _create_batches(self, instances: Iterable[Instance], shuffle: bool) -> Iterable[Batch]:
+    def _create_batches(
+        self, instances: Iterable[Instance], shuffle: bool
+    ) -> Iterable[Batch]:
         """
         As you can see, we don't shuffle our objects here.
         """
@@ -220,11 +229,13 @@ class PnetIterator(DataIterator):
                 yield Batch(batch_instances)
 
     @classmethod
-    def from_params(cls, params: Params) -> 'PnetIterator':
-        batch_size = params.pop_int('batch_size', 32)
-        instances_per_epoch = params.pop_int('instances_per_epoch', None)
-        max_instances_in_memory = params.pop_int('max_instances_in_memory', None)
+    def from_params(cls, params: Params) -> "PnetIterator":
+        batch_size = params.pop_int("batch_size", 32)
+        instances_per_epoch = params.pop_int("instances_per_epoch", None)
+        max_instances_in_memory = params.pop_int("max_instances_in_memory", None)
         params.assert_empty(cls.__name__)
-        return cls(batch_size=batch_size,
-                   instances_per_epoch=instances_per_epoch,
-                   max_instances_in_memory=max_instances_in_memory)
+        return cls(
+            batch_size=batch_size,
+            instances_per_epoch=instances_per_epoch,
+            max_instances_in_memory=max_instances_in_memory,
+        )

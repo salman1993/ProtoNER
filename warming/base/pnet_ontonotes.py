@@ -11,8 +11,12 @@ from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import TextField, SequenceLabelField, Field
 from allennlp.data.instance import Instance
 
-from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer, TokenCharactersIndexer, \
-    ELMoTokenCharactersIndexer
+from allennlp.data.token_indexers import (
+    TokenIndexer,
+    SingleIdTokenIndexer,
+    TokenCharactersIndexer,
+    ELMoTokenCharactersIndexer,
+)
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
 
@@ -24,7 +28,7 @@ def _is_divider(line: str) -> bool:
     return not line or line == """-DOCSTART- -X- -X- O"""
 
 
-_VALID_LABELS = {'ner', 'pos', 'chunk'}
+_VALID_LABELS = {"ner", "pos", "chunk"}
 
 import os
 import json
@@ -42,16 +46,23 @@ import copy
 This file is a changed analogous file from allennlp. That's why it may contain irrelevant comments.
 """
 
+
 def tokenize(s):
     return re.findall(r"[\w']+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]", s)
 
 
-def snips_reader(file='train', dataset_download_path='../ontonotes/', valid_class=None, random_seed=None, drop_empty=False):
+def snips_reader(
+    file="train",
+    dataset_download_path="../ontonotes/",
+    valid_class=None,
+    random_seed=None,
+    drop_empty=False,
+):
     # Here we just take all the data, erase all the labels of the target class and train as supervised model
     # Then this model is used as initialization for WarmProto and WarmBase model
     sentences = []
     ys = []
-    with open(dataset_download_path + 'train.txt', "r") as data_file:
+    with open(dataset_download_path + "train.txt", "r") as data_file:
         for is_divider, lines in itertools.groupby(data_file, _is_divider):
             # Ignore the divider chunks, so that `lines` corresponds to the words
             # of a single sentence.
@@ -66,13 +77,12 @@ def snips_reader(file='train', dataset_download_path='../ontonotes/', valid_clas
     for sent in sentences:
         for word in sent:
             if word[1][2:] in valid_class:
-                word[1] = 'O'
+                word[1] = "O"
 
-    if file == 'train.txt':
-        return sentences[:(len(sentences)//2)]
+    if file == "train.txt":
+        return sentences[: (len(sentences) // 2)]
     else:
-        return sentences[(len(sentences)//2):]
-
+        return sentences[(len(sentences) // 2) :]
 
 
 @DatasetReader.register("onto_pnet")
@@ -111,16 +121,18 @@ class PnetOntoDatasetReader(DatasetReader):
         specified here.
     """
 
-    def __init__(self,
-                 token_indexers: Dict[str, TokenIndexer] = None,
-                 valid_class: str = None,
-                 random_seed: int = None,
-                 drop_empty: bool = False,
-                 tag_label: str = "ner",
-                 feature_labels: Sequence[str] = (),
-                 lazy: bool = False) -> None:
+    def __init__(
+        self,
+        token_indexers: Dict[str, TokenIndexer] = None,
+        valid_class: str = None,
+        random_seed: int = None,
+        drop_empty: bool = False,
+        tag_label: str = "ner",
+        feature_labels: Sequence[str] = (),
+        lazy: bool = False,
+    ) -> None:
         super().__init__(lazy)
-        self._token_indexers = token_indexers or {'tokens': SingleIdTokenIndexer()}
+        self._token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
         if tag_label is not None and tag_label not in _VALID_LABELS:
             raise ConfigurationError("unknown tag label type: {}".format(tag_label))
         for label in feature_labels:
@@ -136,12 +148,27 @@ class PnetOntoDatasetReader(DatasetReader):
     @overrides
     def _read(self, file_path: str) -> Iterable[Instance]:
         # if `file_path` is a URL, redirect to the cache
-        if file_path[-8:] == 'test.txt':
-            data = snips_reader('test.txt', valid_class=self.valid_class, random_seed=self.random_seed, drop_empty=self.drop_empty)
-        elif file_path[-9:] == 'train.txt':
-            data = snips_reader('train.txt', valid_class=self.valid_class, random_seed=self.random_seed, drop_empty=self.drop_empty)
+        if file_path[-8:] == "test.txt":
+            data = snips_reader(
+                "test.txt",
+                valid_class=self.valid_class,
+                random_seed=self.random_seed,
+                drop_empty=self.drop_empty,
+            )
+        elif file_path[-9:] == "train.txt":
+            data = snips_reader(
+                "train.txt",
+                valid_class=self.valid_class,
+                random_seed=self.random_seed,
+                drop_empty=self.drop_empty,
+            )
         else:
-            data = snips_reader('valid.txt', valid_class=self.valid_class, random_seed=self.random_seed, drop_empty=self.drop_empty)
+            data = snips_reader(
+                "valid.txt",
+                valid_class=self.valid_class,
+                random_seed=self.random_seed,
+                drop_empty=self.drop_empty,
+            )
         # if file_path[-9:] == 'train.txt':
         #     print(data[:10])
 
@@ -153,12 +180,14 @@ class PnetOntoDatasetReader(DatasetReader):
             tokens = [Token(token) for token in tokens]
             sequence = TextField(tokens, self._token_indexers)
 
-            instance_fields: Dict[str, Field] = {'tokens': sequence}
+            instance_fields: Dict[str, Field] = {"tokens": sequence}
             # Add "feature labels" to instance
-            if 'ner' in self.feature_labels:
-                instance_fields['ner_tags'] = SequenceLabelField(ner_tags, sequence, "ner_tags")
+            if "ner" in self.feature_labels:
+                instance_fields["ner_tags"] = SequenceLabelField(
+                    ner_tags, sequence, "ner_tags"
+                )
             # Add "tag label" to instance
-            instance_fields['tags'] = SequenceLabelField(ner_tags, sequence)
+            instance_fields["tags"] = SequenceLabelField(ner_tags, sequence)
             yield Instance(instance_fields)
 
     def text_to_instance(self, tokens: List[Token]) -> Instance:  # type: ignore
@@ -166,27 +195,32 @@ class PnetOntoDatasetReader(DatasetReader):
         We take `pre-tokenized` input here, because we don't have a tokenizer in this class.
         """
         # pylint: disable=arguments-differ
-        return Instance({'tokens': TextField(tokens, token_indexers=self._token_indexers)})
+        return Instance(
+            {"tokens": TextField(tokens, token_indexers=self._token_indexers)}
+        )
 
     @classmethod
-    def from_params(cls, params: Params) -> 'PnetOntoDatasetReader':
+    def from_params(cls, params: Params) -> "PnetOntoDatasetReader":
         # token_indexers = TokenIndexer.dict_from_params(params.pop('token_indexers', {}))
-        token_indexers = {"tokens": SingleIdTokenIndexer(lowercase_tokens=True),
-                          "token_characters": TokenCharactersIndexer(),
-                          "elmo": ELMoTokenCharactersIndexer()
-                          }
-        valid_class = params.pop('valid_class')
-        random_seed = params.pop('random_seed')
-        drop_empty = params.pop('drop_empty')
+        token_indexers = {
+            "tokens": SingleIdTokenIndexer(lowercase_tokens=True),
+            "token_characters": TokenCharactersIndexer(),
+            "elmo": ELMoTokenCharactersIndexer(),
+        }
+        valid_class = params.pop("valid_class")
+        random_seed = params.pop("random_seed")
+        drop_empty = params.pop("drop_empty")
 
-        tag_label = params.pop('tag_label', None)
-        feature_labels = params.pop('feature_labels', ())
-        lazy = params.pop('lazy', False)
+        tag_label = params.pop("tag_label", None)
+        feature_labels = params.pop("feature_labels", ())
+        lazy = params.pop("lazy", False)
         params.assert_empty(cls.__name__)
-        return PnetOntoDatasetReader(token_indexers=token_indexers,
-                                     valid_class=valid_class,
-                                     random_seed=random_seed,
-                                     drop_empty=drop_empty,
-                                     tag_label=tag_label,
-                                     feature_labels=feature_labels,
-                                     lazy=lazy)
+        return PnetOntoDatasetReader(
+            token_indexers=token_indexers,
+            valid_class=valid_class,
+            random_seed=random_seed,
+            drop_empty=drop_empty,
+            tag_label=tag_label,
+            feature_labels=feature_labels,
+            lazy=lazy,
+        )
