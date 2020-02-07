@@ -52,7 +52,7 @@ for random_seed in range(1, 5):
             base_config["dataset_reader"]["drop_empty"] = True
             base_config["trainer"]["cuda_device"] = config[1]
             this_dir = os.getcwd().split("/")[-1]
-            local_name = "_".join(config[0])
+            local_name = config[0]  # "_".join(config[0])
             copy_directory = (
                 os.getcwd()[: -(len(this_dir) + 1)]
                 + "/copies/"
