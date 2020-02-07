@@ -38,12 +38,13 @@ classes = [
     "TIME",
 ]
 
-GPU = [0, 1, 2] * 6  # I did it this way but you can do using some different way
-configs = list(zip(classes, GPU))
+CUDA_DEVICE = [-1] * 18  # CUDA device for each of the 18 classes above, -1 for CPU
+
+configs = list(zip(classes, CUDA_DEVICE))
 for random_seed in range(1, 5):
     base_config["dataset_reader"]["random_seed"] = random_seed
     processes = []
-    for subseries in range(len(classes) / 3):
+    for subseries in range(len(classes) // 3):
         subconfigs = configs[(subseries * 3) : (subseries * 3 + 3)]
         for config in subconfigs:
             # Here we edit the config for a particular experiment
