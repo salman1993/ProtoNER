@@ -18,9 +18,9 @@ execute("rm -rf " + os.getcwd() + "/copies/*")
 execute("rm -rf " + os.getcwd() + "/logs/*")
 # Here is the list of all classes
 classes = [
-    "GPE",
     "DATE",
     "ORG",
+    "GPE",
     "EVENT",
     "LOC",
     "FAC",
@@ -44,8 +44,9 @@ configs = list(zip(classes, CUDA_DEVICE))
 for random_seed in range(1, 2):
     base_config["dataset_reader"]["random_seed"] = random_seed
     processes = []
-    for subseries in [0]: # range(len(classes) // 3):
-        subconfigs = configs[(subseries * 3) : (subseries * 3 + 3)]
+    for subseries in [0]:  # range(len(classes) // 3):
+        # subconfigs = configs[(subseries * 3) : (subseries * 3 + 3)]
+        subconfigs = configs[(subseries * 2) : (subseries * 2 + 2)]
         for config in subconfigs:
             # Here we edit the config for a particular experiment
             base_config["dataset_reader"]["valid_class"] = config[0]
