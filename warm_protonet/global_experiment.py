@@ -49,21 +49,23 @@ classes = [
     "TIME",
 ]
 
-CUDA_DEVICE = [0] * 18  # CUDA device for each of the 18 classes above, -1 for CPU
+## NEW
 
-configs = list(zip(classes, CUDA_DEVICE))
-for random_seed in range(1, 2):
+CUDA_DEVICE = 0 # CUDA device for each of the 18 classes above, -1 for CPU
+
+for random_seed in range(1, 3):
     base_config["dataset_reader"]["random_seed"] = random_seed
-    processes = []
-    for subseries in [0]:  # range(len(classes) // 3):
-        # subconfigs = configs[(subseries * 3) : (subseries * 3 + 3)]
-        subconfigs = configs[(subseries * 2) : (subseries * 2 + 2)]
-        for config in subconfigs:
+    num_classes_per_exp = 2 # Run 2 experiments for a class at a time
+    for class_start_idx in range(0, len(classes), num_classes_per_exp):
+        processes = []
+        for exp_class_idx in range(num_classes_per_exp):
+            class_idx = class_start_idx + exp_class_idx
+            exp_class = classes[class_idx]
             # Here we edit the config for a particular experiment
-            base_config["dataset_reader"]["valid_class"] = config[0]
+            base_config["dataset_reader"]["valid_class"] = exp_class
             base_config["dataset_reader"]["drop_empty"] = False
-            base_config["trainer"]["cuda_device"] = config[1]
-            base_config["model"]["cuda_device"] = config[1]
+            base_config["trainer"]["cuda_device"] = CUDA_DEVICE
+            base_config["model"]["cuda_device"] = CUDA_DEVICE
             this_dir = os.getcwd().split("/")[-1]
 
             copy_directory = (
@@ -71,7 +73,7 @@ for random_seed in range(1, 2):
                 + "/copies/"
                 + this_dir
                 + "/pnet_"
-                + config[0]
+                + exp_class
                 + "_"
                 + str(random_seed)
             )
@@ -87,7 +89,7 @@ for random_seed in range(1, 2):
                 + "/models/"
                 + this_dir
                 + "/pnet_"
-                + config[0]
+                + exp_class
                 + "_"
                 + str(random_seed)
             )
